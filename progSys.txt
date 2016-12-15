@@ -1,0 +1,70 @@
+/* According to POSIX.1-2001 */
+#include <sys/select.h>
+
+/* According to earlier standards */
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+// bin, bout -> buffers
+
+while (1)
+{
+	FD_ZERO(fd_set *set);
+
+	if (!bin) // Si le buffer est vide
+		FD_SET(&fdin, STDIN_FILENO);
+	if (!bout) // Si le buffer est vide
+		FD_SET(&fdin, PIPE_IN);
+	if (bin) // Si le buffer est plein
+		FD_SET(&fdout, STDOUT_FILENO);
+	if (bout) // Si le buffer est plein
+		FD_SET(&fdout, PIPE_OUT);
+	select(max(PIPE_IN, PIPE_OUT) + 1, &fdin, &fdout);
+}
+
+while (1)
+{
+	if (FD_ISSET(&fdin, STDIN_FILENO))
+	{
+		read();
+		bin <= 0; // On vide le buffer
+	}
+	if (FD_ISSET(&fdout, PIPE_OUT))
+	{
+		write(PIPE_OUT);
+		bin <= 0; // On rempli le buffer
+	}
+	if (FD_ISSET(&fdin, PIPE_IN))
+	{
+		write(PIPE_IN);
+		bout <= 0; // On vide le buffer
+	}
+	if (FD_ISSET(&fdin, STDIN_FILENO))
+	{
+		write();
+		bout <= 0; // On rempli le buffer
+	}
+}
+
+
+/*******************************************************
+********************************************************
+					Mémoire Partagée
+********************************************************
+*******************************************************/
+
+mmap
+
+PROT_READ	// Droit de lire
+	_WRITE	// Droit d'écrire
+	_EXEC	// Droit d'éxecuter
+MAP_PRIVATE	-> COW // Copy On Write
+   _SHARED
+
+
+fd = shm_open("/cnom"); acces pour tout les programmes
+	-> ftruncate(fd, size);
+
+h = (int *) mmap(fd, ... , sizeof(int));
+*h = get_pid();
